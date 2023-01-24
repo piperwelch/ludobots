@@ -17,7 +17,7 @@ def create_robot():
     pyrosim.Send_Cube(name="Torso", pos=[1,0,1.5], size=[length, width, height]) 
     pyrosim.Send_Joint( name = "Torso_Backleg" , parent= "Torso" , child = "Backleg" , type = "revolute", position = [0.5,0,1])
     pyrosim.Send_Cube(name="Backleg", pos=[-0.5,0,-0.5], size=[length, width, height])
-    pyrosim.Send_Joint( name = "Torse_Frontleg" , parent= "Torso" , child = "Frontleg" , type = "revolute", position = [1.5,0,1])
+    pyrosim.Send_Joint( name = "Torso_Frontleg" , parent= "Torso" , child = "Frontleg" , type = "revolute", position = [1.5,0,1])
     pyrosim.Send_Cube(name="Frontleg", pos=[0.5,0,-0.5], size=[length, width, height]) 
     # pyrosim.Send_Joint( name = "Link0_Link1" , parent= "Link0" , child = "Link1" , type = "revolute", position = [0.5,0,1])
     # pyrosim.Send_Cube(name="Link3", pos=[0.5,0,0.5], size=[length, width, height])
