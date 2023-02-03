@@ -7,10 +7,10 @@ import random
 import matplotlib.pyplot as plt
 import math 
 import constants as c 
-from simulation import SIMULATION
-simulation = SIMULATION()
-simulation.Run()
+class WORLD:
 
+    def __init__(self):
+        
+        p.loadSDF("world.sdf")
 
-
-simulation.__del__()
+        planeId = p.loadURDF("plane.urdf")
