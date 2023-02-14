@@ -8,9 +8,12 @@ import matplotlib.pyplot as plt
 import math 
 import constants as c 
 from simulation import SIMULATION
-simulation = SIMULATION()
-simulation.Run()
+import sys 
 
+directOrGUI = sys.argv[1]
+simulation = SIMULATION(directOrGUI)
+simulation.Run()
+simulation.Get_Fitness()
 
 
 simulation.__del__()

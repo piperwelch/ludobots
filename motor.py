@@ -23,7 +23,7 @@ class MOTOR:
         self.amplitude = constants.amplitude
         self.frequency = constants.frequency
         self.offset = constants.offset
-        print("JOINT NAME", self.jointName)
+        # print("JOINT NAME", self.jointName)
         if self.jointName == b'Torso_Backleg':
             self.frequency *=2
         self.motorValues = np.sin(np.linspace(0, 2*3.14, 1000))
