@@ -4,16 +4,18 @@ import os
 import random 
 class SOLUTION:
 
-    def __init__(self):
+    def __init__(self, myID):
+        self.myID = myID 
         self.weights = np.random.rand(3,2)
         self.weights = self.weights *2 -1
-
+    def Set_ID(self, id):
+        self.myID = id 
     def Evaluate(self, directOrGUI):
         self.Create_World()
         self.Create_Body()
         self.Create_Brain()
 
-        os.system("python simulate.py {}".format(directOrGUI))
+        os.system("start /B python simulate.py {} {}".format(directOrGUI, self.myID))
         f = open("fitness.txt", "r")
         self.fitness = float(f.read())
 
@@ -44,7 +46,7 @@ class SOLUTION:
         pyrosim.End()
 
     def Create_Brain(self):
-        pyrosim.Start_NeuralNetwork("brain.nndf")
+        pyrosim.Start_NeuralNetwork("brain{}.nndf".format(self.myID))
         pyrosim.Send_Sensor_Neuron(name = 0 , linkName = "Torso")
         pyrosim.Send_Sensor_Neuron(name = 1 , linkName = "Backleg")
         pyrosim.Send_Sensor_Neuron(name = 2 , linkName = "Frontleg")

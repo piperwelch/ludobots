@@ -12,7 +12,7 @@ import constants as c
 
 class SIMULATION:
 
-    def __init__(self, directOrGUI):
+    def __init__(self, directOrGUI, solutionID):
         self.directOrGUI = directOrGUI
         physicsClient = 0
         if directOrGUI == "DIRECT":
@@ -25,7 +25,7 @@ class SIMULATION:
 
         
         self.world = WORLD()
-        self.robot = ROBOT()
+        self.robot = ROBOT(solutionID)
 
     def Run(self):
         for i in range(1000):
