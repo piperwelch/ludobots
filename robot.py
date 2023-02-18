@@ -7,7 +7,7 @@ import os
 class ROBOT:
 
     def __init__(self, solutionID):
-        
+        self.solutionID = solutionID
         self.robotId = p.loadURDF("body.urdf")
 
         pyrosim.Prepare_To_Simulate(self.robotId)
@@ -43,8 +43,11 @@ class ROBOT:
        stateOfLinkZero= p.getLinkState(self.robotId,0)
        positionOfLinkZero = stateOfLinkZero[0]
        xCoordinateOfLinkZero = positionOfLinkZero[0]
-       f = open("fitness.txt", "w")
+       f = open("tmp{}.txt".format(self.solutionID), "w")
        f.write(str(xCoordinateOfLinkZero))
+       f.close()
+       os.system("rename tmp{}.txt fitness{}.txt".format(self.solutionID, self.solutionID))
+
 
 
         
