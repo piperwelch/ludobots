@@ -1,6 +1,8 @@
 from robot import ROBOT
 from world import WORLD 
-import pybullet as p
+import contextlib
+with contextlib.redirect_stdout(None):
+    import pybullet as p
 import time
 import pybullet_data
 import pyrosim.pyrosim as pyrosim
@@ -14,17 +16,17 @@ class SIMULATION:
 
     def __init__(self, directOrGUI, solutionID):
         self.directOrGUI = directOrGUI
-        physicsClient = 0
+        self.solutionID = solutionID
         if directOrGUI == "DIRECT":
-            physicsClient = p.connect(p.DIRECT)
+            self.physicsClient = p.connect(p.DIRECT)
         else:
-            physicsClient = p.connect(p.GUI)
+            self.physicsClient = p.connect(p.GUI)
 
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0,0,-9.8)
 
         
-        self.world = WORLD()
+        self.world = WORLD(solutionID)
         self.robot = ROBOT(solutionID)
 
     def Run(self):
@@ -35,7 +37,11 @@ class SIMULATION:
             self.robot.Act(i)
             if self.directOrGUI != "DIRECT":
                 time.sleep(1/300)
+
     def Get_Fitness(self):
         self.robot.Get_Fitness()
     def __del__(self):
-        p.disconnect()
+        try:
+            p.disconnect()
+        except:
+            pass

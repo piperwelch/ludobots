@@ -7,10 +7,12 @@ import random
 import matplotlib.pyplot as plt
 import math 
 import constants as c 
+import time
+import os 
 class WORLD:
 
-    def __init__(self):
-        
-        p.loadSDF("world.sdf")
-
+    def __init__(self, solutionID):
+        time.sleep(1)
+        p.loadSDF("world{}.sdf".format(solutionID))
         planeId = p.loadURDF("plane.urdf")
+        os.system("del world{}.sdf".format(solutionID))
