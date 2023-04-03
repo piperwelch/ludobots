@@ -11,9 +11,11 @@ from simulation import SIMULATION
 import sys 
 
 directOrGUI = sys.argv[1]
-solutionID = sys.argv[2]
+solutionID = int(sys.argv[2])
+bot_ids = list(sys.argv[3].split(","))
 
-simulation = SIMULATION(directOrGUI, solutionID)
+simulation = SIMULATION(directOrGUI, solutionID, bot_ids)
+
 simulation.Run()
 simulation.Get_Fitness()
 

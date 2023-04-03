@@ -1,4 +1,4 @@
-import constants
+import constants as c
 import pyrosim.pyrosim as pyrosim
 import pybullet as p
 import numpy as np
@@ -18,16 +18,16 @@ class MOTOR:
 
         targetPosition = desiredAngle,
 
-        maxForce = constants.max_force)
+        maxForce = c.max_force)
     def Prepare_To_Act(self):
-        self.amplitude = constants.amplitude
-        self.frequency = constants.frequency
-        self.offset = constants.offset
-        # print("JOINT NAME", self.jointName)
+        self.amplitude = c.amplitude
+        self.frequency = c.frequency
+        self.offset = c.offset
+
         if self.jointName == b'Torso_Backleg':
             self.frequency *=2
-        self.motorValues = np.sin(np.linspace(0, 2*3.14, 1000))
-        for i in range(1000):
+        self.motorValues = np.sin(np.linspace(0, 2*3.14, c.simulation_time))
+        for i in range(c.simulation_time):
             self.motorValues[i]= self.amplitude * np.sin(self.frequency * (i + self.offset))
 
         self.motorValues = np.interp(self.motorValues, (self.motorValues.min(), self.motorValues.max()), (-3.14/4, 3.14/4))

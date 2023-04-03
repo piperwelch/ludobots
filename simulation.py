@@ -11,10 +11,11 @@ import random
 import matplotlib.pyplot as plt
 import math 
 import constants as c 
+from swarm import SWARM
 
 class SIMULATION:
 
-    def __init__(self, directOrGUI, solutionID):
+    def __init__(self, directOrGUI, solutionID, bot_ids):
         self.directOrGUI = directOrGUI
         self.solutionID = solutionID
         if directOrGUI == "DIRECT":
@@ -25,21 +26,24 @@ class SIMULATION:
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0,0,-9.8)
 
-        
-        self.world = WORLD(solutionID)
-        self.robot = ROBOT(solutionID)
+        self.world = WORLD(self.solutionID)
+        self.swarm = SWARM(self.solutionID, bot_ids)
 
     def Run(self):
-        for i in range(1000):
+        for i in range(c.simulation_time):
             p.stepSimulation()
-            self.robot.Sense(i)
-            self.robot.Think()
-            self.robot.Act(i)
+            for robot in self.swarm.robots.values():
+                robot.Sense(i)
+                robot.Think()
+                robot.Act(i)
+                robot.Get_position()
+
             if self.directOrGUI != "DIRECT":
                 time.sleep(1/300)
 
     def Get_Fitness(self):
-        self.robot.Get_Fitness()
+        self.swarm.Get_Fitness()
+
     def __del__(self):
         try:
             p.disconnect()

@@ -13,6 +13,6 @@ class WORLD:
 
     def __init__(self, solutionID):
         time.sleep(1)
-        p.loadSDF("world{}.sdf".format(solutionID))
+        p.loadSDF("world217.sdf".format(solutionID))
         planeId = p.loadURDF("plane.urdf")
-        os.system("del world{}.sdf".format(solutionID))
+        # os.system("del world{}.sdf".format(solutionID))
