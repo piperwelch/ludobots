@@ -76,7 +76,7 @@ class PARALLEL_HILL_CLIMBER:
    
     def Mutate(self):
         for child in self.children.values():
-            child.Mutate()
+            child.Mutate(self.bot_pool)
 
     def Select(self):
         for k, v in self.children.items():
@@ -105,8 +105,8 @@ class PARALLEL_HILL_CLIMBER:
             if float(v.fitness) > 3.0:
                 os.system("move brain{}*.* bot_pool/".format(v.myID))
                 os.system("move body{}*.* bot_pool/".format(v.myID))
-        f = open("best_sln.txt", "w")
-        f.write(str(best_sln.weights))
+        # f = open("best_sln.txt", "w")
+        # f.write(str(best_sln.weights))
         
         for i in range(0, c.populationSize*(c.numberOfGenerations+1)):
             if i != int(best_sln_id):

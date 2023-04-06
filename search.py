@@ -3,6 +3,6 @@ from parallelHillClimber import PARALLEL_HILL_CLIMBER
 import time 
 phc = PARALLEL_HILL_CLIMBER()
 phc.Evolve("DIRECT")
-# phc.Show_Best()
+phc.Show_Best()
 
-phc.Save_Best()
+# phc.Save_Best()

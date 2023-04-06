@@ -13,6 +13,7 @@ f = open("fitness_evolution.csv", "r")
 file_read = f.readlines()
 cleaned_file = [float(ent.strip("\n")) for ent in file_read ]
 plt.plot(cleaned_file, label = "Fitness Over Time")
+# plt.xticks([0,10,20,30,40,50,60,70,80])
 plt.xlabel("Evolutionary Time")
 plt.ylabel("Fitness")
 # plt.plot(frontLegSensorValues, label = "Front leg")

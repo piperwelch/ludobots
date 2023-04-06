@@ -34,10 +34,11 @@ class SOLUTION:
         start_locs = [[0, 0], [0,5], [5,0], [5,5]]
         count = 0
         for id in self.bot_ids:
+            print(id,start_locs[count][0],start_locs[count][1])
             self.Create_Body(start_locs[count][0],start_locs[count][1],1,id)
             # self.Create_Brain(id)
             count+=1 
-
+        # exit(0)
         # while not os.path.exists("brain{}.nndf".format(self.myID)):
         #     time.sleep(0.1)
         not_finished = True
@@ -204,10 +205,13 @@ class SOLUTION:
         pyrosim.End()  
 
 
-    def Mutate(self):
-        for id in range(self.myID, self.myID+ c.SWARM_SIZE):
+    def Mutate(self, bot_pool):
+        pass
+        # self.bot_ids[np.random.randint(len(self.bot_ids))] = np.random.choice(bot_pool)
 
-            mutRow = random.randint(0,c.numSensorNeurons-1)
-            mutCol = random.randint(0,c.numMotorNeurons-1)
+        # for id in range(self.myID, self.myID+ c.SWARM_SIZE):
 
-            self.weights[id][mutRow, mutCol] = random.random() * 2 - 1
+        #     mutRow = random.randint(0,c.numSensorNeurons-1)
+        #     mutCol = random.randint(0,c.numMotorNeurons-1)
+
+        #     self.weights[id][mutRow, mutCol] = random.random() * 2 - 1

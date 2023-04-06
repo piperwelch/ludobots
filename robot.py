@@ -17,7 +17,7 @@ class ROBOT:
         self.trajectory = {0:[]}
         while self.robotId == "":
             try:
-                self.robotId = p.loadURDF("bot_pool/body{}.urdf".format(solutionID))
+                self.robotId = p.loadURDF("body{}.urdf".format(solutionID))
             except:
                 time.sleep(0.01)
 
@@ -52,11 +52,13 @@ class ROBOT:
             self.motors[str(jointName)] = MOTOR(jointName)
 
     def Act(self, t):
-        for neuronName in self.nn.Get_Neuron_Names():
-            if self.nn.Is_Motor_Neuron(neuronName):
-                jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
-                desiredAngle = self.nn.Get_Value_Of(neuronName)
-                self.motors[jointName].Set_Value(self.robotId, desiredAngle*c.motorJointRange)
+        # print(type(self.robotId))
+        p.applyExternalForce( self.robotId, -1, [10,0,0], [1,1,0.5], p.LINK_FRAME)
+        # for neuronName in self.nn.Get_Neuron_Names():
+        #     if self.nn.Is_Motor_Neuron(neuronName):
+        #         jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
+        #         desiredAngle = self.nn.Get_Value_Of(neuronName)
+        #         self.motors[jointName].Set_Value(self.robotId, desiredAngle*c.motorJointRange)
     def Think(self):
         self.nn.Update()
 
