@@ -11,5 +11,6 @@ BOUNDARY_LENGTH_X = 10
 BOUNDARY_LENGTH_Y = 10 
 MAX_LEVEL = 13 
 SWARM_SIZE = 2
-simulation_time = 10000
+simulation_time = 2000
+radius = 4
 #impulse forced 

@@ -11,9 +11,12 @@ import constants as c
 import time
 import numpy as np
 from scipy.stats import circvar
+import matplotlib.pyplot as plt
+import pickle 
 class SWARM:
 
     def __init__(self, solutionID, bot_ids):
+        self.bot_ids = bot_ids
         self.solutionID = solutionID
         self.robots = {}
         for id in bot_ids:
@@ -57,7 +60,15 @@ class SWARM:
             points_touples = v
             points_arr = np.reshape(points_touples, newshape=(len(points_touples),2))
             trajectories_arr[k] = points_arr
-        # print(trajectories_arr)
+        xs = []
+        ys = []
+        for pt in trajectories_arr[self.bot_ids[0]]:
+            xs.append(pt[0])
+            ys.append(pt[1])
+        # plt.plot(xs, ys)
+        # plt.show()
+        with open("bot_pool_trajectories/pickle{}.p".format(self.bot_ids[0]), "wb") as f: # "wb" because we want to write in binary mode
+            pickle.dump([xs, ys], f)
         fitness = self.evaluate_h(trajectories_arr)
 
         f = open("tmp{}.txt".format(self.solutionID), "w")
@@ -97,6 +108,7 @@ class SWARM:
         count = 0
         for i in points:
             trajectory = points[i]
+            print(trajectory)
             x_starts.append(trajectory[0,0])
             y_starts.append(trajectory[0,1])
             # print(i == 0)
