@@ -15,7 +15,7 @@ class SOLUTION:
         self.bot_ids = swarm_ids
         self.VOXEL_SIZE = [0.1,0.1,0.1]
 
-        self.radius = 4
+        self.radius = 3
         self.length = self.radius * 2 
 
         self.body_as_array = np.zeros((self.length, self.length, self.length), dtype=int) #Generate the body shape 
@@ -25,10 +25,7 @@ class SOLUTION:
         self.Z_OFFSET = self.VOXEL_SIZE[0]/2 # body must be above ground
         self.voxel_IDs = {}
         self.next_voxel_ID_available = -1
-        # self.weights = {}
-        # for id in range(myID, myID+ c.SWARM_SIZE):
-        #     self.weights[id] = np.random.rand(c.numSensorNeurons,c.numSensorNeurons)
-        #     self.weights[id] = self.weights[id] *2 -1
+
 
     def Update_Weight_Map(self, id):
         count = 0
@@ -48,13 +45,6 @@ class SOLUTION:
         self.voxel_id_index_map = {}
         pyrosim.Start_URDF("body{}.urdf".format(id))
 
-        if lockZ:
-            pass
-            # self.Generate_Fixed_Base()
-
-            # self.Generate_Swiveler()
-
-            # self.Generate_Pusher()
 
         # compute COM of base layer (this will be the base joint if Z not locked)
         base_layer = self.body_as_array[:,:,1]
@@ -70,7 +60,7 @@ class SOLUTION:
 
         # Create base link at 0,0,0
         # voxel_color = "Yellow" if self.body_as_array[base_link_pos[0],base_link_pos[1],base_link_pos[2]]==2 else "Blue"
-        print(base_link_pos)
+
         pyrosim.Send_Cube(name=base_link_name, pos=[base_link_pos[0],base_link_pos[1],base_link_pos[2]], size=[0,0,0])
 
         voxels_generated = 1
@@ -78,7 +68,7 @@ class SOLUTION:
         # Generate Links
         for x in range(self.body_as_array.shape[0]-1, 0, -1):
             for y in range(self.body_as_array.shape[1]-1, 0, -1):
-                for z in range(int(self.body_as_array.shape[2]) -2, 0, -1):
+                for z in range(int(self.body_as_array.shape[2]) -1, 0, -1):
 
                     voxel_name=str(x)+str(y)+str(z)
                     if self.body_as_array[x,y,z]>0 and voxel_name != base_link_name:
@@ -95,7 +85,7 @@ class SOLUTION:
                             # voxel_color = "Yellow" if self.body_as_array[x,y,z]==2 else "Blue"
                         
                             # Send voxel
-                            pyrosim.Send_Cube(name=voxel_name, pos=[y/(1/self.VOXEL_SIZE[0]),x/(1/self.VOXEL_SIZE[0]),z/(1/self.VOXEL_SIZE[0])+self.Z_OFFSET], size=self.VOXEL_SIZE)
+                            pyrosim.Send_Cube(name=voxel_name, pos=[start_y+y/(1/self.VOXEL_SIZE[0]),start_x+x/(1/self.VOXEL_SIZE[0]),z/(1/self.VOXEL_SIZE[0])+self.Z_OFFSET], size=self.VOXEL_SIZE)
 
                             voxels_generated+=1
             
@@ -108,7 +98,7 @@ class SOLUTION:
         
         for x in range(self.body_as_array.shape[0]-1, 0, -1):
             for y in range(self.body_as_array.shape[1]-1, 0, -1):
-                for z in range(int(self.body_as_array.shape[2]) - 2, 0, -1):
+                for z in range(int(self.body_as_array.shape[2]) - 1, 0, -1):
                     
                     voxel_name=str(x)+str(y)+str(z)
                     
@@ -121,7 +111,7 @@ class SOLUTION:
 
                             joint_name = parent_name + "_" + voxel_name
 
-                            pyrosim.Send_Joint(name=joint_name, parent=parent_name, child=voxel_name, type="fixed", position="0 0 0",jointAxis = "0 0 1")
+                            pyrosim.Send_Joint(name=joint_name, parent=parent_name, child=voxel_name, type="fixed", position="0 0 0",jointAxis = "1 1 1")
         
 
 
@@ -161,22 +151,15 @@ class SOLUTION:
         start_locs = [[0, 0], [0,5], [5,0], [5,5]]
         count = 0
         for id in self.bot_ids:
-            print(id,start_locs[count][0],start_locs[count][1])
             self.Create_Body(start_locs[count][0],start_locs[count][1],1,id)
-            # self.Create_Brain(id)
             count+=1 
-        # exit(0)
-        # while not os.path.exists("brain{}.nndf".format(self.myID)):
-        #     time.sleep(0.1)
+
         not_finished = True
 
         while not_finished:
-            # with open("bot_pool/brain{}.nndf".format(self.myID), "r") as file:
-            #     last_line_b = file.readlines()[-1]
             with open("world{}.sdf".format(self.myID), "r") as file:
                 last_line_w = file.readlines()[-1]
-            # if last_line_b == "</neuralNetwork>" and last_line_w == "</sdf>":
-            #     not_finished = False  
+
             if last_line_w == "</sdf>":
                 not_finished = False             
         print(self.bot_ids)
@@ -201,7 +184,6 @@ class SOLUTION:
             os.system("del fitness{}.txt".format(id))
 
 
-
     def Create_World(self, x, y, z):
         length = 1
         width = 0.1
@@ -211,96 +193,17 @@ class SOLUTION:
         pyrosim.Send_Cube(name='x', pos=[30,30,1], size=[1,1,1])
         pyrosim.End()
     
-    # def Create_Body(self, start_x, start_y, start_z, id):
-    #     length = 1
-    #     width = 1
-    #     height = 1
-
-    #     pyrosim.Start_URDF("body{}.urdf".format(id))
-    #     radius = 4
-    #     length = radius * 2
-
-    #     body = np.zeros((length, length, length), dtype=int) #Generate the body shape 
-    #     r2 = np.arange(-radius, radius ) ** 2 
-    #     dist2 = r2[:, None, None] + r2[:, None] + r2
-    #     body[dist2 < radius ** 2] = 1
-    #     print(body.shape[0])
-    #     for x in range(length):
-    #         for y in range(length):
-    #             for z in range(length):
-    #                 if body[x,y,z] == 1:
-    #                     pyrosim.Send_Cube(name="Box_{}_{}_{}".format(x,y,z), pos=[x/10,y/10,z/10], size=[0.1, 0.1, 0.1]) 
-    #     for x in range(length):
-    #         for y in range(length):
-    #             for z in range(length):
-    #                 try:
-    #                     pyrosim.Send_Joint(name="{}_{}_{}_to_{}_{}_{}".format(x,y,z, x+1,y,z), 
-    #                         parent="Box_{}_{}_{}".format(x,y,z), 
-    #                         child="Box_{}_{}_{}".format(x+1,y,z), 
-    #                         type="revolute", 
-    #                         position=[x+0.5, y,z], 
-    #                         jointAxis="1 0 1")
-    #                     pyrosim.Send_Joint(name="{}_{}_{}_to_{}_{}_{}".format(x,y,z, x+1,y,z), 
-    #                         parent="Box_{}_{}_{}".format(x,y,z), 
-    #                         child="Box_{}_{}_{}".format(x,y+1,z), 
-    #                         type="revolute", 
-    #                         position=[x, y+0.5,z], 
-    #                         jointAxis="1 0 1")
-    #                     pyrosim.Send_Joint(name="{}_{}_{}_to_{}_{}_{}".format(x,y,z, x+1,y,z), 
-    #                         parent="Box_{}_{}_{}".format(x,y,z), 
-    #                         child="Box_{}_{}_{}".format(x,y,z+1), 
-    #                         type="revolute", 
-    #                         position=[x, y,z+0.5], 
-    #                         jointAxis="1 0 1")
-    #                 except:
-    #                     continue
-    #     # pyrosim.Send_Cube(name="Base", pos=[start_x, start_y, 0], size=[0.6,0.6,0.01])
-    #     # pyrosim.Send_Joint(
-    #     #     name="Torso_Base", 
-    #     #     parent="Torso", 
-    #     #     child="Base", 
-    #     #     type="revolute", 
-    #     #     position=[start_x, start_y,0.01], 
-    #     #     jointAxis="1 0 1"
-    #     # )
-    #     pyrosim.End()
 
     def Create_Brain(self, id):
         pass
-        # pyrosim.Start_NeuralNetwork("brain{}.nndf".format(id))
-        # pyrosim.Send_Sensor_Neuron(name=0, linkName="RightLower")
-        # pyrosim.Send_Sensor_Neuron(name=1, linkName="LeftLower")
-        # pyrosim.Send_Sensor_Neuron(name=2, linkName="FrontLower")
-        # pyrosim.Send_Sensor_Neuron(name=3, linkName="BackLower")
-
-        # pyrosim.Send_Motor_Neuron(name=4, jointName=b'Torso_BackLeg')
-        # pyrosim.Send_Motor_Neuron(name=5, jointName=b'Torso_FrontLeg')
-        # pyrosim.Send_Motor_Neuron(name=6, jointName=b'Torso_LeftLeg')
-        # pyrosim.Send_Motor_Neuron(name=7, jointName=b'Torso_RightLeg')
-        # pyrosim.Send_Motor_Neuron(name=8, jointName=b'LeftLeg_LeftLower')
-        # pyrosim.Send_Motor_Neuron(name=9, jointName=b'RightLeg_RightLower')
-        # pyrosim.Send_Motor_Neuron(name=10, jointName=b'BackLeg_BackLower')
-        # pyrosim.Send_Motor_Neuron(name=11, jointName=b'FrontLeg_FrontLower')
-        # for currentRow in range(0,c.numSensorNeurons):
-        #     for currentColumn in range(0,c.numMotorNeurons):
-        #         pyrosim.Send_Synapse(sourceNeuronName = currentRow, targetNeuronName = currentColumn+3 , weight = self.weights[id][currentRow][currentColumn])
-
-        # pyrosim.End()  
 
 
     def Mutate(self, bot_pool):
         pass
-        # self.bot_ids[np.random.randint(len(self.bot_ids))] = np.random.choice(bot_pool)
 
-        # for id in range(self.myID, self.myID+ c.SWARM_SIZE):
-
-        #     mutRow = random.randint(0,c.numSensorNeurons-1)
-        #     mutCol = random.randint(0,c.numMotorNeurons-1)
-
-        #     self.weights[id][mutRow, mutCol] = random.random() * 2 - 1
-sln = SOLUTION(0, 0)
-sln.Create_Body(0,7,1,0)
-sln.Create_World(1,2,1)
-with open("cilia_pickle{}.p".format(0), "wb") as f: # "wb" because we want to write in binary mode
-    pickle.dump([sln.voxel_IDs, sln.cilia_dict, sln.voxel_id_index_map], f)
-print(sln.voxel_IDs, sln.cilia_dict)
+# sln = SOLUTION(0, 0)
+# sln.Create_Body(0,1,1,3)
+# sln.Create_World(1,2,1)
+# with open("cilia_pickle{}.p".format(0), "wb") as f: # "wb" because we want to write in binary mode
+#     pickle.dump([sln.voxel_IDs, sln.cilia_dict, sln.voxel_id_index_map], f)
+# print(sln.voxel_IDs, sln.cilia_dict)

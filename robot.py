@@ -20,7 +20,7 @@ class ROBOT:
         self.solutionID = solutionID
         self.robotId = ""
         self.trajectory = {0:[]}
-        self.length = 8
+        self.length = 6
         while self.robotId == "":
             try:
                 self.robotId = p.loadURDF("body{}.urdf".format(0))
@@ -54,6 +54,9 @@ class ROBOT:
 
 
     def Prepare_To_Act(self):
+        # self.body = self.generate_sphere()
+        # print(self.body)
+        # self.cilia = self.generate_restricted_cilia_forces(self.body)
         # with open("cilia_pool/pickle{}.p".format(self.solutionID), 'rb') as f:
         #     self.cilia  = pickle.load(f)[0]
         self.Gen_Cilia()
@@ -84,26 +87,50 @@ class ROBOT:
             b[1:-1, 1:-1, 2:, None], b[1:-1, 1:-1, :-2, None]), axis=3)
         return neigh
         
-    def Gen_Cilia(self):
-        radius = 3
-        length = radius * 2 
+    def shift_down(self, body):
+        while True:  # shift down until in contact with surface plane
+            if np.sum(body[:, :, 0]) == 0:
+                body[:, :, :-1] = body[:, :, 1:]
+                body[:, :, -1] = np.zeros_like(body[:, :, -1])
+            else:
+                break
+        return body
 
-        self.body_as_array = np.zeros((length, length, length), dtype=int) #Generate the body shape 
-        r2 = np.arange(-radius, radius ) ** 2 
+    def generate_sphere(self, radius=3):
+
+        # make sphere 
+        length = radius*2+1
+        body = np.zeros((length, length, length), dtype=int)
+        r2 = np.arange(-radius, radius + 1) ** 2
         dist2 = r2[:, None, None] + r2[:, None] + r2
-        self.body_as_array[dist2 < radius ** 2] = 1
+        # body[dist2 < radius ** 2] = 1
+        body[dist2 < radius ** 2] = 1
 
-        xs,ys,zs = self.get_surface_cell_coords(self.body_as_array)
-        surface_array = np.zeros((self.length, self.length, self.length), dtype = int)
-        surface_array[xs, ys, zs] = 1
+        return self.shift_down(body)
 
-        self.cilia = np.random.random(size=(self.length, self.length, self.length, 3))*400-200
-        self.cilia[:,:,:,0][surface_array!=1] = 0 # clear uncecessary cilia #x cilia 
-        self.cilia[:,:,:,1][surface_array!=1] = 0 #y cilia
-        self.cilia[:,:,:,2] = 0 # no cilia forces in the z direction4
+    def Gen_Cilia(self):
+        # radius = 3
+        # length = radius * 2 
+
+        # self.body_as_array = np.zeros((length, length, length), dtype=int) #Generate the body shape 
+        # r2 = np.arange(-radius, radius ) ** 2 
+        # dist2 = r2[:, None, None] + r2[:, None] + r2
+        # self.body_as_array[dist2 < radius ** 2] = 1
+
+        # xs,ys,zs = self.get_surface_cell_coords(self.body_as_array)
+        # surface_array = np.zeros((self.length, self.length, self.length), dtype = int)
+        # surface_array[xs, ys, zs] = 1
+
+        # self.cilia = (np.random.random(size=(self.length, self.length, self.length, 3))*2 - 1)*10
+        # self.cilia[:,:,:,0][surface_array!=1] = 0 # clear uncecessary cilia #x cilia 
+        # self.cilia[:,:,:,1][surface_array!=1] = 0 #y cilia
+        # self.cilia[:,:,:,2] = 0 # no cilia forces in the z direction4
         # print(sum(sum(sum(sum(self.cilia)))))
+        self.cilia = np.random.random(size=(92, 3))*150-75
         with open("cilia_pool/pickle{}.p".format(self.solutionID), "wb") as f: # "wb" because we want to write in binary mode
             pickle.dump([self.cilia], f)
+        
+        return self.cilia 
 
         
     def fibonacci_sphere(self, samples=1000):
@@ -128,45 +155,40 @@ class ROBOT:
 
         return xs, ys, zs
 
+
     def Act(self, t):
+        #hard coded surface voxels for bot of radius  3 
+        for voxelID in [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 21, 25, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 43, 44, 48, 49, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 66, 67, 71, 72, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91]:
+            
+            xyz_forces = self.cilia[voxelID]
+            xyz_forces[2] = 0
 
-        # fig = plt.figure()
-        # ax = fig.add_subplot(projection='3d')
-        # xs, ys, zs = [],[],[]
-        # for pt in self.voxel_id_index.values():
-        #     xs.append(pt[0])
-        #     ys.append(pt[1])
-        #     zs.append(pt[2])
-        # print(type(zs[0]))
-        # ax.scatter(xs, ys, zs)
-        # # plt.scatter(0,0,10)
-        # plt.show()
 
-        for voxelID, c in self.voxel_ids.items():
 
-            if int(c) != -1 and self.cilia_voxels[int(c)] == True:
-                # time.sleep(10)
-                voxel_data = p.getLinkState(self.robotId, int(c))
+            if voxelID==-1:
+                voxel_com_pos, voxel_com_orientation = p.getBasePositionAndOrientation(self.robotId)
+            else:
+                voxel_data = p.getLinkState(self.robotId, voxelID)
                 voxel_com_pos = voxel_data[0]
-                # print(c, voxel_com_pos)
-                force = self.voxel_id_index[int(c)]
-                        
-                
-                # xs, ys, zs = [],[],[]
-                # for pt in self.voxel_id_index.values():
-                #     xs.append(pt[0])
-                #     ys.append(pt[1])
-                #     zs.append(pt[2])
-                # print(type(zs[0]))
 
-                x_force = self.cilia[force[0], force[1], force[2], 0]
-                y_force = self.cilia[force[0], force[1], force[2], 1]
-                # print(x_force, y_force, voxel_com_pos)
-                p.applyExternalForce(self.robotId, c, [x_force,y_force,0], voxel_com_pos, p.WORLD_FRAME)
+            p.applyExternalForce(self.robotId, voxelID, xyz_forces, voxel_com_pos, p.WORLD_FRAME)
+        # for voxelID, c in self.voxel_ids.items():
+        #     if int(c) != -1 and self.cilia_voxels[int(c)] == True:
+        #         # time.sleep(10)
+        #         voxel_data = p.getLinkState(self.robotId, int(c))
+        #         voxel_com_pos = voxel_data[0]
+        #         # print(c, voxel_com_pos)
+        #         force = self.voxel_id_index[int(c)]
+                
+        #         p.changeDynamics(self.robotId, c, lateralFriction=0.09)
+        #         x_force = self.cilia[force[0], force[1], force[2], 0]
+        #         y_force = self.cilia[force[0], force[1], force[2], 1]
+
+        #         p.applyExternalForce(self.robotId, c, [x_force,y_force,0], [voxel_com_pos[0] + 0.05, voxel_com_pos[1] + 0.05,voxel_com_pos[2]], p.LINK_FRAME)
                 # print("force applied")
 
 
     def Think(self):
         self.nn.Update()
-# for i in range(500):
-#     rb = ROBOT(i)
+for i in range(500):
+    rb = ROBOT(i)

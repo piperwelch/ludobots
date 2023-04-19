@@ -55,8 +55,6 @@ class SWARM:
         trajectories_arr = {}
 
         for k, v in self.bot_trajectories.items():
-            # print(len(v))
-            # exit()
             points_touples = v
             points_arr = np.reshape(points_touples, newshape=(len(points_touples),2))
             trajectories_arr[k] = points_arr
@@ -89,8 +87,6 @@ class SWARM:
             if pt[1] < y_min:
                 y_min = pt[1]
 
-        # print(x_min, y_min, x_max, y_max)
-        # exit()
         fitness = self.compute_straightness_index(self.bot_trajectories[self.solutionID])*2 + abs(x_max - x_min) + abs(y_max - y_min)
         f = open("tmp{}.txt".format(self.solutionID), "w")
         f.write(str(fitness))
@@ -98,20 +94,21 @@ class SWARM:
         os.system("ren tmp{}.txt fitness{}.txt".format(self.solutionID, self.solutionID))        
 
     def evaluate_h(self,points):
-
+        return 0
         # Compute the center of the starting points
 
         # Get initial starting points of all bots
+        print(points)
         x_starts = []
         y_starts = []
-        # print(type(points))
+
         count = 0
         for i in points:
             trajectory = points[i]
-            print(trajectory)
+
             x_starts.append(trajectory[0,0])
             y_starts.append(trajectory[0,1])
-            # print(i == 0)
+
             # Also create array of all coordinates for use in computing the bounding box around the trajectories later
             if count == 0:
                 all_coords = points[i]

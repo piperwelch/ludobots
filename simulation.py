@@ -54,8 +54,6 @@ class SIMULATION:
             if i < 200:
                 continue
             for robot in self.swarm.robots.values():
-                # robot.Sense(i)
-                # robot.Think()
                 robot.Act(i)
                 robot.Get_position()
 

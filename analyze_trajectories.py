@@ -31,11 +31,10 @@ def compute_straightness_index(x,y):
     civ = circvar(headings,low=-np.pi, high=np.pi)
 
     return 1 - civ
-for i in range(500):
+for i in range(310):
     with open("bot_pool_trajectories/pickle{}.p".format(i), 'rb') as f:
         x, y = pickle.load(f)
         # print(len(x))
-    if compute_straightness_index(x,y) < 0.8 and compute_straightness_index(x,y) > 0.3:
         print(compute_straightness_index(x,y), i)
         plt.plot(x,y)
     

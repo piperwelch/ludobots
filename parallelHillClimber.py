@@ -40,6 +40,7 @@ class PARALLEL_HILL_CLIMBER:
             self.Evolve_For_One_Generation(self.directOrGUI)
         
     def Evaluate(self, solutions):
+
         for parent in solutions.values():
             parent.Start_Simulation(self.directOrGUI)
         for parent in solutions.values():

@@ -6,7 +6,7 @@ class HILL_CLIMBER:
     def __init__(self):
 
         self.parent = SOLUTION()
-        # self.Evolve()
+
     
     def Evolve(self, directOrGUI):
         self.parent.Evaluate("x")
@@ -14,6 +14,7 @@ class HILL_CLIMBER:
         for currentGeneration in range(c.numberOfGenerations):
             self.Evolve_For_One_Generation(directOrGUI)
         self.Show_Best()
+    
     def Evolve_For_One_Generation(self, directOrGUI):
         self.Spawn()
 

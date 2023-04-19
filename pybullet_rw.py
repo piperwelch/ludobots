@@ -7,7 +7,7 @@ class PYBULLET_RW():
 
     def __init__(self, body_as_array, cilia):
 
-        self.VOXEL_SIZE = [0.1,0.1,0.1]
+        self.VOXEL_SIZE = [1,1,1]
         self.Z_OFFSET = self.VOXEL_SIZE[0]/2 # body must be above ground
 
         self.body_as_array = body_as_array
@@ -17,11 +17,10 @@ class PYBULLET_RW():
         self.next_voxel_ID_available = -1 # base index
 
     def write_body_urdf(self, lockZ=True, save_filename="body0.urdf"):
-
+        self.surface_voxels_map = {}
         pyrosim.Start_URDF(save_filename)
 
         if lockZ:
-
             self.Generate_Fixed_Base()
 
             self.Generate_Swiveler()
@@ -30,7 +29,6 @@ class PYBULLET_RW():
 
         # compute COM of base layer (this will be the base joint if Z not locked)
         base_layer = self.body_as_array[:,:,1]
-        print(base_layer)
         base_com = center_of_mass(base_layer>0) # ignore cilia when computing center of mass
         print(base_com)
         base_link_pos = [int(base_com[0]), int(base_com[1]), 0]
@@ -42,10 +40,12 @@ class PYBULLET_RW():
 
         # Create base link at 0,0,0
         voxel_color = "Yellow" if self.body_as_array[base_link_pos[0],base_link_pos[1],base_link_pos[2]]==2 else "Blue"
-        pyrosim.Send_Cube(name=base_link_name, pos=[base_link_pos[0],base_link_pos[1],base_link_pos[2]+self.Z_OFFSET], size=[0,0,0])
+        pyrosim.Send_Cube(name=base_link_name, pos=[base_link_pos[0],base_link_pos[1],base_link_pos[2]+self.Z_OFFSET], size=self.VOXEL_SIZE)
 
         voxels_generated = 1
-
+        self.surface_voxels = np.zeros((length, length, length), dtype = int)
+        xs,ys,zs = self.get_surface_cell_coords(self.body_as_array)
+        self.surface_voxels[xs,ys,zs] =1
         # Generate Links
         for x in range(self.body_as_array.shape[0]):
             for y in range(self.body_as_array.shape[1]):
@@ -56,13 +56,17 @@ class PYBULLET_RW():
                     if self.body_as_array[x,y,z]>0 and voxel_name != base_link_name:
 
                         self.voxel_IDs[voxel_name] = self.next_voxel_ID_available
+
+                        if self.surface_voxels[x,y,z] == 1:
+                            self.surface_voxels_map[self.next_voxel_ID_available] = True 
                         self.next_voxel_ID_available+=1
                         
                         voxel_color = "Yellow" if self.body_as_array[x,y,z]==2 else "Blue"
                     
                         # Send voxel
-                        pyrosim.Send_Cube(name=voxel_name, pos=[y/(1/self.VOXEL_SIZE[0]),x/(1/self.VOXEL_SIZE[0]),z/(1/self.VOXEL_SIZE[0])+self.Z_OFFSET], size=self.VOXEL_SIZE)
+                        pyrosim.Send_Cube(name=voxel_name, pos=[y,x,z+self.Z_OFFSET], size=self.VOXEL_SIZE)
                         
+
                         voxels_generated+=1
         
         # Generate joints (to record information via getBasePositionAndOrientation joints have to be listed in the URDF after all links)
@@ -85,22 +89,20 @@ class PYBULLET_RW():
 
                         joint_name = parent_name + "_" + voxel_name
 
-                        pyrosim.Send_Joint(name=joint_name, parent=parent_name, child=voxel_name, type="fixed", position="0 0 0",jointAxis = "0 0 1")
+                        pyrosim.Send_Joint(name=joint_name, parent=parent_name, child=voxel_name, type="fixed", position="0 0 0",  jointAxis = "0 0 1")
 
         pyrosim.End()
-
-
         print("Voxels Generated:", voxels_generated)
 
     def Generate_Fixed_Base(self):
 
-        pyrosim.Send_Cube(name="FixedBase" , pos=[0,0,-1] , size=self.VOXEL_SIZE)
+        pyrosim.Send_Cube(name="FixedBase" , pos=[0,0,-1] , size=self.VOXEL_SIZE, mass=0.0)
         self.voxel_IDs["FixedBase"] = self.next_voxel_ID_available
         self.next_voxel_ID_available += 1
 
     def Generate_Swiveler(self):
 
-        pyrosim.Send_Cube(  name="Swiveler" , pos=[0,0,-2] , size=self.VOXEL_SIZE)
+        pyrosim.Send_Cube(  name="Swiveler" , pos=[0,0,-2] , size=self.VOXEL_SIZE, mass=0.0)
 
         pyrosim.Send_Joint( name = "FixedBase_Swiveler" , parent= "FixedBase" , child = "Swiveler" , type = "revolute", position = "0 0 0", jointAxis = "0 0 1")
         self.voxel_IDs["Swiveler"] = self.next_voxel_ID_available
@@ -113,31 +115,7 @@ class PYBULLET_RW():
     #     pyrosim.Send_Joint( name = "Swiveler_Pusher" , parent= "Swiveler" , child = "Pusher" , type = "planar", position = "0 0 0", jointAxis = "0 0 1")
     #     self.voxel_IDs["Pusher"] = self.next_voxel_ID_available
     #     self.next_voxel_ID_available += 1
-    def get_surface_cell_coords(self, arr):
-        # Get the coordinates of cells on the surface of the bot
-        xs = []
-        ys = []
-        zs = []
-        neigh = self.get_neighbors(arr)
 
-        for x in range(arr.shape[0]):
-            for y in range(arr.shape[1]):
-                for z in range(arr.shape[2]):
-                    if arr[x,y,z]==1 and np.sum(neigh[x,y,z,:])<6:
-                        xs.append(x)
-                        ys.append(y)
-                        zs.append(z)
-
-        return xs,ys,zs
-
-    def get_neighbors(self, a):
-        b = np.pad(a, pad_width=1, mode='constant', constant_values=0)
-        neigh = np.concatenate((
-            b[2:, 1:-1, 1:-1, None], b[:-2, 1:-1, 1:-1, None],
-            b[1:-1, 2:, 1:-1, None], b[1:-1, :-2, 1:-1, None],
-            b[1:-1, 1:-1, 2:, None], b[1:-1, 1:-1, :-2, None]), axis=3)
-        return neigh
-    
     def write_cilia_txt(self, save_filename="data/cilia.txt"):
         print(self.voxel_IDs)
 
@@ -159,7 +137,30 @@ class PYBULLET_RW():
                         f.write(voxel_name + ',' + str(self.voxel_IDs[voxel_name]) + ',' + str(cilia_x) + ',' + str(cilia_y) + ',' + str(cilia_z) + '\n')
         
         f.close()
+    def get_surface_cell_coords(self, arr):
+        # Get the coordinates of cells on the surface of the bot
+        xs = []
+        ys = []
+        zs = []
+        neigh = self.get_neighbors(arr)
 
+        for x in range(arr.shape[0]):
+            for y in range(arr.shape[1]):
+                for z in range(arr.shape[2]):
+                    if arr[x,y,z]==1 and np.sum(neigh[x,y,z,:])<6:
+                        xs.append(x)
+                        ys.append(y)
+                        zs.append(z)
+
+        return xs,ys,zs
+    def get_neighbors(self, a):
+        b = np.pad(a, pad_width=1, mode='constant', constant_values=0)
+        neigh = np.concatenate((
+            b[2:, 1:-1, 1:-1, None], b[:-2, 1:-1, 1:-1, None],
+            b[1:-1, 2:, 1:-1, None], b[1:-1, :-2, 1:-1, None],
+            b[1:-1, 1:-1, 2:, None], b[1:-1, 1:-1, :-2, None]), axis=3)
+        return neigh
+        
 def generate_cilia_forces(body, lockZ):
     # Random forces array of size body.shape between [-1,1)
     # cilia = np.random.random(size=(body.shape[0], body.shape[1], body.shape[2], 3))*2-1
@@ -329,14 +330,24 @@ def generate_cube_array(cube_length_in_voxels=4):
 
     return cube_array
 
-radius = 4
+
+radius = 3
 length = radius * 2
 
 body = np.zeros((length, length, length), dtype=int) #Generate the body shape 
 r2 = np.arange(-radius, radius ) ** 2 
 dist2 = r2[:, None, None] + r2[:, None] + r2
-body[dist2 < radius ** 2] = 2
+body[dist2 < radius ** 2] = 1
+# while True:  # shift down until in contact with surface plane
+#     if np.sum(body[:, :, 0]) == 0:
+#         body[:, :, :-1] = body[:, :, 1:]
+#         body[:, :, -1] = np.zeros_like(body[:, :, -1])
+#     else:
+#         break
 
+body = generate_sphere()
 prw = PYBULLET_RW(body, "x")
 
 prw.write_body_urdf(0)
+
+print(generate_restricted_cilia_forces(body))
